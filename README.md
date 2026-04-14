@@ -36,7 +36,7 @@
 | Frontend | Backend | Tools |
 |---------|--------|------|
 | HTML | Node.js | dotenv |
-| CSS | Express.js | GROQ API |
+| CSS | Express.js | Gemini API |
 | JavaScript |  | Chart.js |
 
 ---
@@ -154,7 +154,7 @@ This project is licensed under the **MIT License**.
 | Frontend | Backend | Tools |
 |---------|--------|------|
 | HTML | Node.js | dotenv |
-| CSS | Express.js | GROQ API |
+| CSS | Express.js | Gemini API |
 | JavaScript |  | Chart.js |
 
 ---
@@ -201,8 +201,8 @@ http://localhost:3000
 Create a `.env` file:
 
 ```
-GROQ_API_KEY=your_api_key_here
-PORT=3000
+GEMINI_API_KEY=AIzaSyBjE3MDKW8593yk2lqdhYia6s44MDDh6g4
+GEMINI_MODEL=gemini-2.0-flash
 ```
 
 ---
