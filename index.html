@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoTrack | Carbon Footprint Calculator</title>
+    <meta
+      name="description"
+      content="A modern carbon footprint calculator that estimates yearly emissions and suggests practical ways to reduce them."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <nav class="topbar">
+          <div class="brand">
+            <span class="brand-mark">E</span>
+            <div>
+              <p class="eyebrow">Eco Impact Studio</p>
+              <h1>EcoTrack</h1>
+            </div>
+          </div>
+          <button class="ghost-button" id="loadLastResultBtn" type="button">
+            Load Last Result
+          </button>
+        </nav>
+
+        <div class="hero-content">
+          <section class="hero-copy">
+            <p class="eyebrow">Carbon Footprint Calculator</p>
+            <h2>Understand your yearly emissions and add AI-guided climate action.</h2>
+            <p class="hero-text">
+              Estimate your carbon footprint across transport, electricity, diet,
+              waste, and lifestyle habits. Then generate AI suggestions, create a
+              detailed AI report, and ask sustainability questions in a built-in
+              chatbot.
+            </p>
+            <div class="hero-stats">
+              <article class="stat-card">
+                <span>Global average</span>
+                <strong>4,700 kg</strong>
+                <small>CO2 per person / year</small>
+              </article>
+              <article class="stat-card">
+                <span>Goal zone</span>
+                <strong>&lt; 2,000 kg</strong>
+                <small>lower-impact lifestyle</small>
+              </article>
+            </div>
+          </section>
+
+          <section class="calculator-panel">
+            <form id="carbonForm" class="carbon-form">
+              <div class="form-grid">
+                <label>
+                  <span>Car travel (km/week)</span>
+                  <input type="number" name="carKm" min="0" step="1" value="50" required />
+                </label>
+                <label>
+                  <span>Bike travel (km/week)</span>
+                  <input type="number" name="bikeKm" min="0" step="1" value="10" required />
+                </label>
+                <label>
+                  <span>Public transport (km/week)</span>
+                  <input type="number" name="publicTransportKm" min="0" step="1" value="38" required />
+                </label>
+                <label>
+                  <span>Flights per year</span>
+                  <input type="number" name="flightsPerYear" min="0" step="1" value="2" required />
+                </label>
+                <label>
+                  <span>Electricity usage (kWh/month)</span>
+                  <input type="number" name="electricityKwh" min="0" step="1" value="180" required />
+                </label>
+                <label>
+                  <span>Diet type</span>
+                  <select name="dietType">
+                    <option value="non-vegetarian">Non-vegetarian</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Waste generation (kg/week)</span>
+                  <input type="number" name="wasteKg" min="0" step="0.1" value="4" required />
+                </label>
+                <label>
+                  <span>Shopping frequency</span>
+                  <select name="shoppingFrequency">
+                    <option value="low">Occasional</option>
+                    <option value="medium" selected>Moderate</option>
+                    <option value="high">Frequent</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Water usage</span>
+                  <select name="waterUsage">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Average</option>
+                    <option value="high">High</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button class="primary-button" type="submit">Calculate Footprint</button>
+                <button class="secondary-button" id="resetFormBtn" type="button">Reset</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </header>
+
+      <main class="dashboard" id="reportContent">
+        <section class="summary-panel reveal">
+          <div>
+            <p class="eyebrow">Your Annual Estimate</p>
+            <h3 id="totalFootprint">0 kg CO2/year</h3>
+            <p id="comparisonText" class="muted">
+              Complete the form to compare your footprint against the global average.
+            </p>
+          </div>
+          <div class="summary-actions">
+            <button class="ghost-button" id="saveResultBtn" type="button">Save Result</button>
+            <button class="primary-button" id="downloadPdfBtn" type="button">Download PDF</button>
+          </div>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="card reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Breakdown</p>
+                <h3>Where your emissions come from</h3>
+              </div>
+            </div>
+            <div class="chart-grid">
+              <div class="chart-card">
+                <canvas id="footprintPieChart" aria-label="Footprint pie chart"></canvas>
+              </div>
+              <div class="chart-card">
+                <canvas id="footprintBarChart" aria-label="Footprint bar chart"></canvas>
+              </div>
+            </div>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Instant Suggestions</p>
+                <h3>Built-in ways to reduce your footprint</h3>
+              </div>
+            </div>
+            <ul id="tipsList" class="tips-list">
+              <li>Start with an estimate to unlock reduction tips.</li>
+            </ul>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">AI Suggestions</p>
+                <h3>Personalized AI-powered recommendations</h3>
+              </div>
+              <button class="primary-button" id="generateAiSuggestionsBtn" type="button">
+                Generate AI Suggestions
+              </button>
+            </div>
+            <p id="aiSuggestionsStatus" class="muted">
+              AI suggestions will appear here.
+            </p>
+            <ul id="aiSuggestionsList" class="tips-list">
+              <li>Generate AI suggestions to see tailored reduction ideas.</li>
+            </ul>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">AI Report</p>
+                <h3>Detailed emissions analysis and improvements</h3>
+              </div>
+              <button class="primary-button" id="generateAiReportBtn" type="button">
+                Generate AI Report
+              </button>
+            </div>
+            <p id="aiReportStatus" class="muted">
+              Generate a report for a deeper analysis.
+            </p>
+            <div class="report-grid">
+              <section class="report-block">
+                <strong>Summary</strong>
+                <p id="aiReportSummary" class="muted">
+                  Generate a report to get a clearer picture of your footprint.
+                </p>
+              </section>
+              <section class="report-block">
+                <strong>Major emission sources</strong>
+                <ul id="aiEmissionSources" class="report-list">
+                  <li>Your biggest emission sources will appear here after report generation.</li>
+                </ul>
+              </section>
+              <section class="report-block">
+                <strong>Actionable improvements</strong>
+                <ul id="aiImprovements" class="report-list">
+                  <li>Actionable improvements will appear here once the AI report is ready.</li>
+                </ul>
+              </section>
+            </div>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Progress Tracker</p>
+                <h3>Revisit and compare your saved check-ins</h3>
+              </div>
+            </div>
+            <div class="progress-panel">
+              <div class="progress-meter">
+                <div id="progressFill" class="progress-fill"></div>
+              </div>
+              <p id="progressText" class="muted">
+                Save a few results to see whether your footprint is moving in the right direction.
+              </p>
+            </div>
+            <div id="historyList" class="history-list"></div>
+          </article>
+
+          <article class="card card-wide reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Deeper Analysis</p>
+                <h3>Spot trends, patterns, and possible anomalies</h3>
+              </div>
+            </div>
+            <div class="chart-grid chart-grid-wide">
+              <div class="chart-card">
+                <canvas id="monthlyLineChart" aria-label="Monthly footprint line chart"></canvas>
+              </div>
+              <div class="chart-card">
+                <canvas id="transportBarChart" aria-label="Transport bar chart"></canvas>
+              </div>
+              <div class="chart-card">
+                <canvas id="lifestylePieChart" aria-label="Lifestyle pie chart"></canvas>
+              </div>
+            </div>
+            <div class="analysis-grid">
+              <section class="report-block">
+                <strong>Insights</strong>
+                <p id="analysisSummary" class="muted">
+                  Save multiple results to reveal trend lines, correlations, and outliers.
+                </p>
+              </section>
+              <section class="report-block">
+                <strong>Best graph by data type</strong>
+                <ul id="chartGuideList" class="report-list">
+                  <li>Pie chart: best for showing the share of each emission category in one result.</li>
+                  <li>Bar chart: best for comparing category sizes side by side.</li>
+                  <li>Line chart: best for showing how emissions build up across a sequence like months.</li>
+                  <li>Use the extra transport and lifestyle charts to see which habits deserve attention first.</li>
+                </ul>
+              </section>
+            </div>
+          </article>
+
+          <article class="card card-wide reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">AI Chatbot</p>
+                <h3>Ask sustainability questions anytime</h3>
+              </div>
+            </div>
+            <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+            <p id="chatStatus" class="muted">Start a chat about sustainability.</p>
+            <form id="chatForm" class="chat-form">
+              <input
+                id="chatInput"
+                type="text"
+                placeholder="Ask about transport, food, electricity, waste, or greener habits..."
+                autocomplete="off"
+                required
+              />
+              <button class="primary-button" type="submit">Send</button>
+            </form>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Sustainability Tips</p>
+                <h3>Small changes that can add up over a year</h3>
+              </div>
+            </div>
+            <div class="tips-grid">
+              <article>
+                <strong>Transport</strong>
+                <p>Carpool, switch one commute to public transit, or replace short drives with cycling.</p>
+              </article>
+              <article>
+                <strong>Home Energy</strong>
+                <p>Use efficient appliances, unplug idle devices, and shift to cleaner electricity when available.</p>
+              </article>
+              <article>
+                <strong>Food</strong>
+                <p>Reducing red meat and food waste can significantly lower your footprint over time.</p>
+              </article>
+              <article>
+                <strong>Consumption</strong>
+                <p>Buy durable products, repair more often, and choose second-hand where practical.</p>
+              </article>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
